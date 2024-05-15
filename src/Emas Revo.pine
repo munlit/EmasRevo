@@ -22,7 +22,7 @@ colorSixt =   input.color(color.navy,   title = "Final", inline = "ecolor", grou
 //  ═══  Revo  ═══
 //  ═══  Inputs  ═══
 
-var grpVolume  = " ═══ MAs Activos ═══ "
+var grpVolume  = " ═══ EMAS ═══ "
 ma4Length      = input(4,    title = "MA Inicial",  group = grpVolume)
 ma8Length      = input(8,    title = "MA 2do",      group = grpVolume)
 ma18Length     = input(18,   title = "MA 3ro",      group = grpVolume)
@@ -35,12 +35,6 @@ ma200Length    = input(200,  title = "MA Final",    group = grpVolume)
 //  ═══  Options  ═══
 
 string optionMa	= input.string("EMA", "Tipo de MM",  options = ["EMA", "SMA", "RMA", "WMA", "VWMA"])
-
-//  ══════════════
-//  ═══  Revo  ═══
-//  ═══  Types  ═══
-
-length   = 8
 
 //  ══════════════
 //  ═══  Revo  ═══
