@@ -18,6 +18,15 @@ colorFour =   input.color(#0034c5,      title = "4to",   inline = "ecolor", grou
 colorFift =   input.color(color.gray,   title = "5to",   inline = "ecolor", group = grpColor)  // color Gris
 colorSixt =   input.color(color.navy,   title = "Final", inline = "ecolor", group = grpColor)  // color Violeta
 
+//EMA Color
+col1 = color.new(color.fuchsia, 35)
+col2 = color.new(color.orange, 35)
+col3 = color.new(color.green, 35)
+col4 = color.new(color.red, 35)
+col5 = color.new(color.blue, 35)
+
+
+
 //  ══════════════
 //  ═══  Revo  ═══
 //  ═══  Inputs  ═══
@@ -69,3 +78,114 @@ plot(ma18, color = color.new(colorThir, 80),  linewidth = 1, editable = false)
 plot(ma55, color = color.new(colorFour, 20),  linewidth = 2, editable = false)
 plot(ma100, color = color.new(colorFift, 20),  linewidth = 2, editable = false)
 plot(ma200, color = color.new(colorSixt, 90),  linewidth = 2, editable = false)
+
+
+
+
+
+
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © bharatTrader
+
+//@version=5
+//Multi EMA
+indicator(title='Multi EMA', shorttitle='Multi EMA', overlay=true)
+src = input(title='Source', defval=close)
+showLengthSelected = input.bool(title='Deviations', defval=false, tooltip='Show contraction/expansion from close price in %')
+offset = input.int(0, title='Offset', tooltip='Plot EMA as offset + or -')
+
+showEMA1 = input.bool(title='', defval=true, group='EMA 1', inline='EMA 1')
+len1 = input.int(20, minval=1, title='Length', group='EMA 1', inline='EMA 1')
+
+showEMA2 = input.bool(title='', defval=true, group='EMA 2', inline='EMA 2')
+len2 = input.int(50, minval=1, title='Length', group='EMA 2', inline='EMA 2')
+
+showEMA3 = input.bool(title='', defval=true, group='EMA 3', inline='EMA 3')
+len3 = input.int(100, minval=1, title='Length', group='EMA 3', inline='EMA 3')
+
+showEMA4 = input.bool(title='', defval=true, group='EMA 4', inline='EMA 4')
+len4 = input.int(200, minval=1, title='Length', group='EMA 4', inline='EMA 4')
+
+showEMA5 = input.bool(title='', defval=false, group='EMA 5', inline='EMA 5')
+len5 = input.int(400, minval=1, title='Length', group='EMA 5', inline='EMA 5')
+
+//Tight Close
+showTightCloses = input.bool(title='', defval=false, group='Tight Close', inline="TC")
+contiBarsTightCloses = input.int(2, title="Tight Closes", minval=1, maxval=3, group='Tight Close', inline="TC")
+tightClosesPct = input.float(1.5, title="%", minval=0.5, maxval=5.0, step=0.5, group='Tight Close', inline="TC")
+
+//Fixed for all timeframes
+showFixedEMA = input.bool(title='', defval=false, group='Fixed TF EMA', inline='Fixed EMA')
+fixedTF = input.timeframe('D', "Resolution", group='Fixed TF EMA', inline='Fixed EMA')
+len6 = input.int(200, minval=1, title='Len', group='Fixed TF EMA', inline='Fixed EMA')
+showTrendOfFixedTA = input.bool(true, title = 'Trend', group='Fixed TF EMA', inline='Fixed EMA')
+
+showPocketPivot = input.bool(title='Pocket Pivot', defval=false, group='Pocket Pivot', tooltip='Show Pocket Pivot Candles')
+showPocketPivotTxt = input.bool(title='Mark with Text', defval=false, group='Pocket Pivot')
+pocketPivotLength = input.int(title='Lookback for Pocket Pivot', defval=10, maxval=50, group='Pocket Pivot')
+onlyDownDays = input.bool(title='Consider volume of down days only', defval=true, group='Pocket Pivot')
+pocketPivotPct = input.int(title='Price gap%', defval=4, minval=0, maxval=100, group='Pocket Pivot', tooltip='Tight price on EMA for lookback\nSet to zero to ignore')
+
+//Functions
+highestVolumeOnDownDays(pocketPivotLength) =>
+    maxVol = volume[1]
+    for i = 2 to pocketPivotLength by 1
+        if close[i] < open[i] and volume[i] > maxVol
+            maxVol := volume[i]
+            maxVol
+    maxVol
+
+isPocketPivot() =>
+    highestPeriodClose = ta.highest(close, pocketPivotLength)
+    lowestPeriodClose = ta.lowest(close, pocketPivotLength)
+    previousMaxVolume = onlyDownDays ? highestVolumeOnDownDays(pocketPivotLength) : ta.highest(volume, pocketPivotLength)[1]
+    graceCheck = pocketPivotPct == 0 ? true : highestPeriodClose <= ta.ema(close, pocketPivotLength) * (1 + pocketPivotPct / 100) and lowestPeriodClose >= ta.ema(close, pocketPivotLength) * (1 - pocketPivotPct / 100)
+    showPocketPivot and close > open and volume > previousMaxVolume and graceCheck
+
+isTightClose() =>
+    var pct = tightClosesPct/100
+    bar1 = close <= close[1] * (1 + pct ) and close >= close[1] * (1 - pct)
+    bar2 = close[1] <= close[2] * (1 + pct ) and close[1] >= close[2] * (1 - pct)
+    bar3 = close[2] <= close[3] * (1 + pct ) and close[2] >= close[3] * (1 - pct)
+    contiBarsTightCloses == 1 ? bar1 : contiBarsTightCloses == 2 ? bar1 and bar2 : contiBarsTightCloses == 3 ? bar1 and bar2 and bar3 : false
+
+//Set up
+fixedEMA = request.security(syminfo.tickerid, fixedTF, ta.ema(src, len6))
+
+//Calculations
+ema1 = ta.ema(src, len1)
+ema2 = ta.ema(src, len2)
+ema3 = ta.ema(src, len3)
+ema4 = ta.ema(src, len4)
+ema5 = ta.ema(src, len5)
+
+
+col6 = showTrendOfFixedTA ? fixedEMA > fixedEMA[1] ? color.green : color.red : color.new(color.navy, 20) 
+
+
+//Distances from mean
+d1 = (close - ema1) / ema1 * 100
+d2 = (close - ema2) / ema2 * 100
+d3 = (close - ema3) / ema3 * 100
+d4 = (close - ema4) / ema4 * 100
+d5 = (close - ema5) / ema5 * 100
+d6 = (close - fixedEMA) / fixedEMA * 100
+
+//Description
+devdesc1 = 'EMA' + str.tostring(len1) + ': ' + str.tostring(d1, '#0.00') + '%'
+devdesc2 = 'EMA' + str.tostring(len2) + ': ' + str.tostring(d2, '#0.00') + '%'
+devdesc3 = 'EMA' + str.tostring(len3) + ': ' + str.tostring(d3, '#0.00') + '%'
+devdesc4 = 'EMA' + str.tostring(len4) + ': ' + str.tostring(d4, '#0.00') + '%'
+devdesc5 = 'EMA' + str.tostring(len5) + ': ' + str.tostring(d5, '#0.00') + '%'
+devdesc6 = 'EMA-'+ fixedTF +'(' + str.tostring(len6) + '): ' + str.tostring(d6, '#0.00') + '%'
+
+//Tight Closes
+_isTightClose = isTightClose()
+
+//EMA Plots
+plot(showEMA1 ? ema1 : na, title='EMA 1', linewidth=2, color=col1, offset=offset)
+//plot(ema1 * 0.97, title='SL', linewidth=2, color=color.new(color.gray, 0), offset=offset)
+plot(showEMA2 ? ema2 : na, title='EMA 2', linewidth=2, color=col2, offset=offset)
+plot(showEMA3 ? ema3 : na, title='EMA 3', linewidth=2, color=col3, offset=offset)
+plot(showEMA4 ? ema4 : na, title='EMA 4', linewidth=3, color=col4, offset=offset)
+plot(showEMA5 ? ema5 : na, title='EMA 5', linewidth=2, color=col5, offset=offset)
