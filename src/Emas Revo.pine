@@ -1,0 +1,77 @@
+// ╔═════════════════════════════════╗
+// ║  Moving Averages Revolution     ║
+// ║  @Ultr.                         ║
+// ╚═════════════════════════════════╝
+
+//@version=5
+indicator("Moving Averages Revolution (@Ultr)", shorttitle = "MAs Revo [@Ultr.]", overlay = true)
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Colors  ═══ 
+
+var grpColor = " ═══ Colores ═══ "
+colorInit =   input.color(#33ffac,      title = "Init",  inline = "ecolor", group = grpColor)  // color Menta
+colorSeco =   input.color(#eedd45,      title = "2do",   inline = "ecolor", group = grpColor)  // color Amarillo
+colorThir =   input.color(#e91e63,      title = "3ro",   inline = "ecolor", group = grpColor)  // color Rojo
+colorFour =   input.color(#0034c5,      title = "4to",   inline = "ecolor", group = grpColor)  // color Azul
+colorFift =   input.color(color.gray,   title = "5to",   inline = "ecolor", group = grpColor)  // color Gris
+colorSixt =   input.color(color.navy,   title = "Final", inline = "ecolor", group = grpColor)  // color Violeta
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Inputs  ═══
+
+var grpVolume  = " ═══ MAs Activos ═══ "
+ma4Length      = input(4,    title = "MA Inicial",  group = grpVolume)
+ma8Length      = input(8,    title = "MA 2do",      group = grpVolume)
+ma18Length     = input(18,   title = "MA 3ro",      group = grpVolume)
+ma55Length     = input(55,   title = "MA 4to",      group = grpVolume)
+ma100Length    = input(100,  title = "MA 5to",      group = grpVolume)
+ma200Length    = input(200,  title = "MA Final",    group = grpVolume)
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Options  ═══
+
+string optionMa	= input.string("EMA", "Tipo de MM",  options = ["EMA", "SMA", "RMA", "WMA", "VWMA"])
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Types  ═══
+
+length   = 8
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Functions  ═══
+
+ma(source, length, type) =>
+    type == "SMA" ? ta.sma(source, length) :    // Media Movil Simple
+     type == "EMA" ? ta.ema(source, length) :   // Media Movil Exponencial
+     type == "RMA" ? ta.rma(source, length) :   // Media Movil
+     type == "WMA" ? ta.wma(source, length) :   // Media Movil Ponderada
+     type == "VWMA" ? ta.vwma(source, length) : // Media Movil Ponderada por volumen
+     na
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Instances  ═══
+
+ma4   = ma(close,   ma4Length,  optionMa)
+ma8   = ma(close,   ma8Length,  optionMa)
+ma18  = ma(close,  ma18Length,  optionMa)
+ma55  = ma(close,  ma55Length,  optionMa)
+ma100 = ma(close, ma100Length,  optionMa)
+ma200 = ma(close, ma200Length,  optionMa)
+
+//  ══════════════
+//  ═══  Revo  ═══
+//  ═══  Display  ═══
+
+plot(ma4, color = color.new(colorInit, 80),  linewidth = 1, editable = false)
+plot(ma8, color = color.new(colorSeco, 80),  linewidth = 1, editable = false)
+plot(ma18, color = color.new(colorThir, 80),  linewidth = 1, editable = false)
+plot(ma55, color = color.new(colorFour, 20),  linewidth = 2, editable = false)
+plot(ma100, color = color.new(colorFift, 20),  linewidth = 2, editable = false)
+plot(ma200, color = color.new(colorSixt, 90),  linewidth = 2, editable = false)
